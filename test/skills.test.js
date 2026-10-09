@@ -52,6 +52,24 @@ for (const [path, text] of pages) {
   }
 }
 
+/** Leaves a preview would show as blank or zero, by JSONPath. */
+function hidden(value, path = "$") {
+  if (Array.isArray(value)) return value.flatMap((v, i) => hidden(v, `${path}[${i}]`));
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([k, v]) => hidden(v, `${path}.${k}`));
+  }
+  return value === "" || value === 0 || value == null ? [path] : [];
+}
+
+for (const [path, text] of pages) {
+  for (const [i, { data }] of examples(text).entries()) {
+    if (data === undefined) continue;
+    test(`${path} data ${i + 1} gives every field a value that shows`, () => {
+      assert.deepEqual(hidden(data), []);
+    });
+  }
+}
+
 test("the format kinds the skill names are the schema's", () => {
   const kinds = schema.$defs.FormatKind.enum;
   const [, skill] = pages.find(([path]) => path === SKILL);

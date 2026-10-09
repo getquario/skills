@@ -34,7 +34,8 @@ rows, and which fields sit beside it. Take one of two branches:
   the shape the report needs. Write it as a **sample file** beside the definition, such as
   `invoice.sample.json` beside `invoice.report.json`. The sample is the contract. It holds every
   field the definition reads, with the type the definition expects. Make each value plainly a
-  sample, such as `"Sample Customer Ltd"`.
+  sample, such as `"Sample Customer Ltd"`. Give every field a value that shows: a non-empty
+  string, and a number other than `0`. The preview check in step 3 relies on this.
 
 **Then write the definition against that shape.** In a definition file, set `$schema` to
 `./node_modules/quario/lib/schema.json`. An editor then reads the file against the schema as you
@@ -222,10 +223,19 @@ await writeFile("acme-invoice-2026-03.pdf", await report.render(pdf(), data));
 
 `html()` and `csv()` return a string. `pdf()`, `xlsx()` and `docx()` return a `Uint8Array`.
 
-**No data yet**: render a **preview** from the sample file, over either route. Put `-preview` in
-the filename, such as `invoice-preview`. Tell the user that its figures come from the sample. Then
-save the definition as `invoice.report.json` beside `invoice.sample.json`. The host renders that
-definition with real data later. Leave that step to the host.
+**No data yet**: check the template against its sample, then render a **preview**.
+
+1. **Check.** Render the definition to `html` with the sample as its data, and read the output.
+   Over MCP, read the file `render_report` wrote. In code, `html()` from `@quario/html` returns the
+   string. Validation does not compare the definition with the sample. A field the sample lacks
+   reads as `null`. It renders as a blank, and arithmetic on it renders as `0`. So a blank, a `0`
+   or a `$0.00` that the sample does not hold names a field the definition misreads. Fix that
+   field name, validate again, and check again. The check is done when every field of the sample
+   shows in the output.
+2. **Preview.** Render the target the user asked for from the sample. Put `-preview` in the
+   filename, such as `invoice-preview`. Tell the user that its figures come from the sample.
+3. **Save.** Write the definition as `invoice.report.json` beside `invoice.sample.json`. The host
+   renders that definition with real data later. Leave that step to the host.
 
 The render is done when the file exists and you have told the user its path. For a template, the
 definition file and its sample file also exist.
