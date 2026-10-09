@@ -49,6 +49,7 @@ function verdict() {
 /** The app checks after the first, so a missing module still fails each of them. */
 const APP_EXPECTATIONS = [
   "uses quario/schema.json unchanged as the tool's input schema",
+  "keeps the choice of record out of the model's input",
   "names the invoice's fields in the tool description",
   "answers a faulty definition with its problem, not a render",
   "answers malformed model input without throwing",
@@ -95,6 +96,14 @@ async function gradeApp() {
     inputSchema
       ? `${Object.keys(inputSchema).length} top-level keys, ${JSON.stringify(inputSchema).length} chars`
       : "no input schema",
+  );
+  const chosen = Object.keys(inputSchema?.properties ?? {}).filter((k) =>
+    /invoice|record|id$/i.test(k),
+  );
+  expect(
+    "keeps the choice of record out of the model's input",
+    inputSchema && chosen.length === 0,
+    chosen.length ? `the model supplies ${chosen.join(", ")}` : "the application picks the record",
   );
   const named = spec.fields.filter((f) => new RegExp(`\\b${f}\\b`).test(tool?.description ?? ""));
   expect(
