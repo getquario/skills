@@ -1,0 +1,77 @@
+{
+  "quarter": "Q3 2026",
+  "orders": [
+    {
+      "id": "SO-7001",
+      "date": "2026-07-02",
+      "region": "Benelux",
+      "product": "Standing desk",
+      "units": 4,
+      "unitPrice": 489.0
+    },
+    {
+      "id": "SO-7002",
+      "date": "2026-07-09",
+      "region": "Nordics",
+      "product": "Task chair",
+      "units": 12,
+      "unitPrice": 229.5
+    },
+    {
+      "id": "SO-7003",
+      "date": "2026-07-15",
+      "region": "Benelux",
+      "product": "Monitor arm",
+      "units": 20,
+      "unitPrice": 64.95
+    },
+    {
+      "id": "SO-7004",
+      "date": "2026-08-01",
+      "region": "DACH",
+      "product": "Standing desk",
+      "units": 7,
+      "unitPrice": 489.0
+    },
+    {
+      "id": "SO-7005",
+      "date": "2026-08-12",
+      "region": "Nordics",
+      "product": "Desk lamp",
+      "units": 30,
+      "unitPrice": 39.9
+    },
+    {
+      "id": "SO-7006",
+      "date": "2026-08-20",
+      "region": "DACH",
+      "product": "Task chair",
+      "units": 5,
+      "unitPrice": 229.5
+    },
+    {
+      "id": "SO-7007",
+      "date": "2026-09-03",
+      "region": "Benelux",
+      "product": "Task chair",
+      "units": 9,
+      "unitPrice": 229.5
+    },
+    {
+      "id": "SO-7008",
+      "date": "2026-09-17",
+      "region": "DACH",
+      "product": "Monitor arm",
+      "units": 15,
+      "unitPrice": 64.95
+    },
+    {
+      "id": "SO-7009",
+      "date": "2026-09-29",
+      "region": "Nordics",
+      "product": "Standing desk",
+      "units": 3,
+      "unitPrice": 489.0
+    }
+  ]
+}

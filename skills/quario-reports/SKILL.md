@@ -35,7 +35,7 @@ rows, and which fields sit beside it. Take one of two branches:
   `invoice.sample.json` beside `invoice.report.json`. The sample is the contract. It holds every
   field the definition reads, with the type the definition expects. Make each value plainly a
   sample, such as `"Sample Customer Ltd"`. Give every field a value that shows: a non-empty
-  string, and a number other than `0`. The preview check in step 3 relies on this.
+  string, and a number other than `0`. The MCP check in step 2 relies on this.
 
 **Then write the definition against that shape.** In a definition file, set `$schema` to
 `./node_modules/quario/lib/schema.json`. An editor then reads the file against the schema as you
@@ -158,30 +158,45 @@ For grouped reports, page setup, styled runs and the full syntax, read
 
 ## 2. Validate
 
-- **MCP**: call `validate_report` with `{ definition }`. Add `targets: ["pdf"]` to validate it
-  against the target you will render to.
-- **Code**: call `quario().plan(definition)`. Pass `{ targets: [capabilities] }` from the target
-  package as the third argument for the same target validation.
+Validation reads the definition. It cannot see the data, and a field the data lacks reads as
+`null`: a blank, or a `0` under arithmetic. So check the definition against the data too, whether
+that is the user's data or your sample.
 
-Both answer `{ problems, warnings }`. A problem is `{ path, message }`, and the message names the
-spot and the fault:
+**Code**: run the check that ships with this skill, from the project directory. `<skill>` is the
+folder this file sits in.
 
-```text
-sort[0].dir: unknown sort direction "descending"
-detail.columns[1].style.format: expected number, currency, percent, or date
-detail[0].value [{{ round(@.x }}]: Unexpected end of expression
+```bash
+node <skill>/scripts/check.mjs invoice.report.json invoices/acme-2026-03.json --target pdf
 ```
 
-Fix the definition at each `path`, then validate again. Fix each warning too. A warning names a
-declaration that contributes nothing. The step is
-done when both lists are empty.
+Leave out the data file to validate the definition alone. `--target` names the target you will
+render to, and defaults to `pdf`. The check needs `quario` and that target installed. It prints
+`ok`, or one line per finding:
 
-Validation proves the definition, not your reading of the data. Two faults pass it:
+```text
+problem sort[0].dir: unknown sort direction "descending"
+problem detail.columns[1].style.format: expected number, currency, percent, or date
+missing $.lines[].price: the definition reads it, the data lacks it
+unread $.lines[].unitPrice: the data holds it, the definition never reads it
+```
 
-- **A `data` path that matches nothing** renders an empty report. Check the path against the shape
-  you wrote down. The `empty` band makes this visible instead of blank.
-- **`@` outside a detail row** fails at render, with the band path in the message. Move the read to
-  an aggregate, or to `$.input`.
+- **problem**: fix the definition at the path the message names.
+- **warning**: fix it too. A warning names a declaration that contributes nothing.
+- **missing**: the definition reads a field by the wrong name. Change the definition to the name
+  the data uses.
+- **unread**: the report never shows that field. Keep it when the user did not ask for it. In a
+  sample file, show it or remove it, because the sample is the contract.
+
+Every row field reads as unread when the `data` path matches nothing. Fix the path first.
+
+The step is done when the check prints `ok`, or only `unread` lines you chose to keep.
+
+**MCP**: call `validate_report` with `{ definition, targets: ["pdf"] }`. It answers
+`{ problems, warnings }` with the same messages, and you fix both lists the same way. It does not
+compare the definition with the data. So call `render_report` with `"target": "html"` and the
+data, and read the file it wrote. A blank, a `0` or a `$0.00` that the data does not hold names a
+field the definition misreads. The step is done when both lists are empty and every field you
+meant to show appears in that file.
 
 ## 3. Render
 
@@ -223,18 +238,12 @@ await writeFile("acme-invoice-2026-03.pdf", await report.render(pdf(), data));
 
 `html()` and `csv()` return a string. `pdf()`, `xlsx()` and `docx()` return a `Uint8Array`.
 
-**No data yet**: check the template against its sample, then render a **preview**.
+**No data yet**: render a **preview** from the sample file, then save the template.
 
-1. **Check.** Render the definition to `html` with the sample as its data, and read the output.
-   Over MCP, read the file `render_report` wrote. In code, `html()` from `@quario/html` returns the
-   string. Validation does not compare the definition with the sample. A field the sample lacks
-   reads as `null`. It renders as a blank, and arithmetic on it renders as `0`. So a blank, a `0`
-   or a `$0.00` that the sample does not hold names a field the definition misreads. Fix that
-   field name, validate again, and check again. The check is done when every field of the sample
-   shows in the output.
-2. **Preview.** Render the target the user asked for from the sample. Put `-preview` in the
-   filename, such as `invoice-preview`. Tell the user that its figures come from the sample.
-3. **Save.** Write the definition as `invoice.report.json` beside `invoice.sample.json`. The host
+1. **Preview.** Render the target the user asked for, with the sample as its data. Put
+   `-preview` in the filename, such as `invoice-preview`. Tell the user that its figures come
+   from the sample.
+2. **Save.** Write the definition as `invoice.report.json` beside `invoice.sample.json`. The host
    renders that definition with real data later. Leave that step to the host.
 
 The render is done when the file exists and you have told the user its path. For a template, the

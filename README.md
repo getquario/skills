@@ -113,3 +113,14 @@ The test reads every definition that a skill tags as ` ```json definition `. It 
 against the published engine. A problem or a warning fails the test. When a ` ```json data `
 block follows the definition, the test also renders the definition to PDF with that data. Run it
 after any edit to a skill, and again after an engine release.
+
+The skill ships `scripts/check.mjs`. It validates a definition, and with data it lists every field
+the definition reads that the data lacks. `test/check.test.js` covers it.
+
+`evals/` holds the agent evals: realistic prompts in `evals.json`, their input files, and
+`grade.mjs`, which checks each run's output with code. Run an agent on each prompt in a project that
+has `quario` and the targets installed, then grade the run:
+
+```bash
+node evals/grade.mjs <run-dir> <eval-name>
+```

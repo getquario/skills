@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { pdf, capabilities } from "@quario/pdf";
 import { quario } from "quario";
 import schema from "quario/schema.json" with { type: "json" };
+import { check } from "../skills/quario-reports/scripts/check.mjs";
 
 const root = new URL("../skills/", import.meta.url);
 const SKILL = "quario-reports/SKILL.md";
@@ -48,6 +49,12 @@ for (const [path, text] of pages) {
       if (data === undefined) return;
       const bytes = await report.render(pdf(), data);
       assert.equal(new TextDecoder().decode(bytes.subarray(0, 5)), "%PDF-");
+    });
+
+    if (data === undefined) continue;
+    test(`${path} definition ${i + 1} reads every field of its data, and no other`, async () => {
+      const { missing, unread } = await check(definition, data);
+      assert.deepEqual({ missing, unread }, { missing: [], unread: [] });
     });
   }
 }

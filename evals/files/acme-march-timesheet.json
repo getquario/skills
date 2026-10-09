@@ -1,0 +1,41 @@
+{
+  "invoiceNumber": "INV-2026-0314",
+  "issuedOn": "2026-04-01",
+  "dueOn": "2026-04-30",
+  "client": {
+    "name": "Acme Robotics Inc.",
+    "address": { "street": "1200 Harbor Blvd", "city": "Oakland, CA 94607" }
+  },
+  "entries": [
+    {
+      "date": "2026-03-03",
+      "description": "Sprint planning and backlog grooming",
+      "hours": 3.5,
+      "rate": 145
+    },
+    {
+      "date": "2026-03-05",
+      "description": "Payment webhook integration",
+      "hours": 7.25,
+      "rate": 145
+    },
+    {
+      "date": "2026-03-11",
+      "description": "Code review, firmware updater",
+      "hours": 2,
+      "rate": 160
+    },
+    {
+      "date": "2026-03-18",
+      "description": "Load testing the order API",
+      "hours": 5.75,
+      "rate": 145
+    },
+    {
+      "date": "2026-03-26",
+      "description": "On-call incident, inventory sync",
+      "hours": 1.5,
+      "rate": 210
+    }
+  ]
+}

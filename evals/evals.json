@@ -1,0 +1,63 @@
+{
+  "skill_name": "quario-reports",
+  "evals": [
+    {
+      "id": 1,
+      "name": "invoice-from-timesheet",
+      "prompt": "Here's the March timesheet export for Acme in acme-march-timesheet.json (project root). Can you turn it into a PDF invoice? Bill each entry's hours at its rate, total in dollars.",
+      "expected_output": "acme-march-timesheet data rendered to a PDF invoice: a saved definition that plans clean, reads only fields the timesheet holds, computes line amounts and the total as rounded formulas, and presents money in USD.",
+      "files": ["evals/files/acme-march-timesheet.json"],
+      "target": "pdf",
+      "data": "acme-march-timesheet.json",
+      "expectations": [
+        "saves the definition as a .report.json file",
+        "the definition plans with no problems or warnings for pdf",
+        "renders the requested pdf file",
+        "computes totals with a sum aggregate",
+        "reads only fields the data holds",
+        "types no figure from the data into the definition",
+        "rounds money arithmetic with round(…, 2)",
+        "presents money as currency in USD"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "statement-template-no-data",
+      "prompt": "we're about to start sending monthly account statements to customers. can you set up a quario template for it (PDF)? opening balance, that month's transactions, closing balance. we don't have the export from the billing system yet, I just want to see what it'd look like",
+      "expected_output": "A template: a definition plus a sample data file as its contract, a preview PDF rendered from the sample, the closing balance computed rather than stored.",
+      "files": [],
+      "target": "pdf",
+      "expectations": [
+        "saves the definition as a .report.json file",
+        "the definition plans with no problems or warnings for pdf",
+        "renders the requested pdf file",
+        "computes totals with a sum aggregate",
+        "reads only fields the sample holds",
+        "saves a sample data file as the template's contract",
+        "gives every sample field a value that shows",
+        "names the preview file as a preview",
+        "computes the closing balance instead of storing it in the sample"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "grouped-xlsx-from-orders",
+      "prompt": "Make an Excel sales report from orders-q3.json, grouped by region with a subtotal per region and a grand total at the bottom. Finance wants to keep working with the numbers in Excel.",
+      "expected_output": "An xlsx workbook from a definition that groups by region with a subtotal aggregate and a report total, amounts kept as real numbers under a format kind.",
+      "files": ["evals/files/orders-q3.json"],
+      "target": "xlsx",
+      "data": "orders-q3.json",
+      "expectations": [
+        "saves the definition as a .report.json file",
+        "the definition plans with no problems or warnings for xlsx",
+        "renders the requested xlsx file",
+        "computes totals with a sum aggregate",
+        "reads only fields the data holds",
+        "types no figure from the data into the definition",
+        "groups by region with a subtotal aggregate",
+        "keeps the grand total a number in the workbook",
+        "presents amounts with a format kind, not a formatting function"
+      ]
+    }
+  ]
+}
