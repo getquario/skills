@@ -72,6 +72,14 @@ npm install quario @quario/pdf
 The agent answers with the path of the file it wrote. Under Claude Code, the MCP server reads
 `dataPath` files from your project directory. Other clients set `QUARIO_DATA_ROOT`.
 
+No data yet? Ask for a template instead:
+
+> Make an invoice template for Acme as a PDF, totals in dollars.
+
+The agent proposes the data shape and writes it as a sample file, such as `invoice.sample.json`.
+It renders a preview from that sample, then saves the definition as `invoice.report.json`. Your
+code renders that definition with real data later.
+
 ---
 
 ## Skills

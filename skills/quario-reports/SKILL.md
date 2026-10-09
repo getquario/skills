@@ -1,6 +1,6 @@
 ---
 name: quario-reports
-description: Produce a report or document (invoice, statement, listing, summary) as PDF, XLSX, DOCX, HTML or CSV by writing a quario report definition. Use when the user asks for a report from data, when writing or fixing a quario definition, or when the validate_report and render_report tools are available.
+description: Produce a report or document (invoice, statement, listing, summary) as PDF, XLSX, DOCX, HTML or CSV by writing a quario report definition. Use when the user asks for a report from data or for a report template before the data exists, when writing or fixing a quario definition, or when the validate_report and render_report tools are available.
 ---
 
 # quario reports
@@ -25,10 +25,16 @@ npm install quario @quario/pdf
 
 ## 1. Declare
 
-**Find the data first.** Read the file, the API response or the record the user named. Write down
-its shape: which array holds the rows, and which fields sit beside it. The definition reads that
-shape and nothing else. If the user gave no data, ask for it. Every row, price and total comes
-from that data.
+**Find the data, or propose it.** The definition reads one data shape: which array holds the
+rows, and which fields sit beside it. Take one of two branches:
+
+- **Data in hand.** Read the file, the API response or the record the user named. Write down its
+  shape. Every row, price and total comes from that data.
+- **No data yet.** The user wants a **template**, and the host stitches the data in later. Propose
+  the shape the report needs. Write it as a **sample file** beside the definition, such as
+  `invoice.sample.json` beside `invoice.report.json`. The sample is the contract. It holds every
+  field the definition reads, with the type the definition expects. Make each value plainly a
+  sample, such as `"Sample Customer Ltd"`.
 
 **Then write the definition against that shape.** In a definition file, set `$schema` to
 `./node_modules/quario/lib/schema.json`. An editor then reads the file against the schema as you
@@ -129,7 +135,7 @@ The definition for "Invoice for Acme, line items for the March work, total in do
 }
 ```
 
-It reads data of this shape:
+It reads this data. With no data yet, the same JSON is its sample file:
 
 ```json data
 {
@@ -216,7 +222,13 @@ await writeFile("acme-invoice-2026-03.pdf", await report.render(pdf(), data));
 
 `html()` and `csv()` return a string. `pdf()`, `xlsx()` and `docx()` return a `Uint8Array`.
 
-The render is done when the file exists and you have told the user its path.
+**No data yet**: render a **preview** from the sample file, over either route. Put `-preview` in
+the filename, such as `invoice-preview`. Tell the user that its figures come from the sample. Then
+save the definition as `invoice.report.json` beside `invoice.sample.json`. The host renders that
+definition with real data later. Leave that step to the host.
+
+The render is done when the file exists and you have told the user its path. For a template, the
+definition file and its sample file also exist.
 
 ## The trust line
 
@@ -228,7 +240,7 @@ agent-written report is safe:
 - **It cannot reach past the host.** It calls only functions the host registered, under the host's
   query budgets and link schemes.
 - **The numbers come from the data.** The definition holds formulas, and the engine evaluates them
-  against the data the host supplies.
+  against the data the host supplies. In a preview, the data is the sample file.
 
 A formula can still be wrong: `sum:=@.unitPrice` where you meant `@.qty * @.unitPrice`. Read each
 aggregate against what the user asked for before you render.
