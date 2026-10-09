@@ -119,6 +119,11 @@ The vocabulary is closed. It is not CSS. `family` (`"sans"`, `"serif"`, `"mono"`
 border triple `border<Side>Width`, `border<Side>Style`, `border<Side>Color`. A border side needs
 all three.
 
+**PDF and XLSX add band defaults under your style.** A report-header item renders bold at 1.4×
+the report's `size`, so 14 pt over a base of 10. A group-header item renders bold. A second
+header line therefore looks like the title above it, though nothing inherits. Set `bold` and
+`size` on the item to override. Your declaration always wins. HTML adds no defaults.
+
 `format` takes a kind, or an object with modifiers:
 
 | Kind       | Modifiers                                                                  |

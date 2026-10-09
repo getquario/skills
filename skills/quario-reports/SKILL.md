@@ -153,7 +153,8 @@ It reads this data. With no data yet, the same JSON is its sample file:
 
 The step is done when every figure the user asked for is a formula over the data.
 
-For grouped reports, page setup, styled runs and the full syntax, read
+For grouped reports, page setup, styled runs, the band defaults PDF and XLSX add, and the full
+syntax, read
 [REFERENCE.md](REFERENCE.md).
 
 ## 2. Validate
