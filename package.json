@@ -1,0 +1,19 @@
+{
+  "name": "@quario/skills",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent skills for quario. The test plans and renders every definition a skill shows against the published engine.",
+  "license": "Apache-2.0",
+  "repository": "getquario/skills",
+  "type": "module",
+  "scripts": {
+    "test": "node --disallow-code-generation-from-strings --test test/*.test.js"
+  },
+  "devDependencies": {
+    "@quario/pdf": "^0.13.0",
+    "quario": "^0.14.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
