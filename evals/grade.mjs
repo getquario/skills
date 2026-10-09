@@ -8,16 +8,166 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { basename, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const CHECK = fileURLToPath(new URL("../skills/quario-reports/scripts/check.mjs", import.meta.url));
 const { evals } = JSON.parse(readFileSync(new URL("evals.json", import.meta.url), "utf8"));
 
-const [runDir, name] = process.argv.slice(2);
+const [run, name] = process.argv.slice(2);
+const runDir = resolve(run);
 const spec = evals.find((e) => e.name === name);
 if (!spec) throw new Error(`unknown eval ${name}`);
 const out = join(runDir, "outputs");
+const results = [];
+const expect = (text, passed, evidence) => results.push({ text, passed: !!passed, evidence });
+
+/** Writes the verdict in the shape the skill-creator viewer reads. */
+function verdict() {
+  const passed = results.filter((r) => r.passed).length;
+  writeFileSync(
+    join(runDir, "grading.json"),
+    JSON.stringify(
+      {
+        expectations: results,
+        summary: {
+          passed,
+          failed: results.length - passed,
+          total: results.length,
+          pass_rate: +(passed / results.length).toFixed(2),
+        },
+      },
+      null,
+      2,
+    ),
+  );
+  console.log(
+    `${name} ${basename(join(runDir, "..", ".."))}/${basename(join(runDir, ".."))}: ${passed}/${results.length}`,
+  );
+}
+
+/** The app checks after the first, so a missing module still fails each of them. */
+const APP_EXPECTATIONS = [
+  "uses quario/schema.json unchanged as the tool's input schema",
+  "names the invoice's fields in the tool description",
+  "answers a faulty definition with its problem, not a render",
+  "answers malformed model input without throwing",
+  "renders a clean definition to a PDF in out/",
+  "renders with the application's data: the PDF shows the correct total",
+  "adds a passing test for the handler",
+];
+
+if (spec.app) {
+  await gradeApp();
+  verdict();
+  process.exit(0);
+}
+
+/** An app eval: the agent built a tool and its handler. Call them the way the app would. */
+async function gradeApp() {
+  const module = join(out, "src/invoice-tool.js");
+  let tool;
+  let handle;
+  try {
+    ({ draftInvoice: tool, handleDraftInvoice: handle } = await import(pathToFileURL(module).href));
+  } catch (error) {
+    expect(
+      "exports draftInvoice and handleDraftInvoice from src/invoice-tool.js",
+      false,
+      error.message,
+    );
+    for (const text of APP_EXPECTATIONS) expect(text, false, "no module to call");
+    return;
+  }
+  expect(
+    "exports draftInvoice and handleDraftInvoice from src/invoice-tool.js",
+    tool && typeof handle === "function",
+    `tool: ${!!tool}, handler: ${typeof handle}`,
+  );
+
+  const projectSchema = JSON.parse(
+    readFileSync(join(out, "node_modules/quario/lib/schema.json"), "utf8"),
+  );
+  const inputSchema = tool?.input_schema ?? tool?.parameters ?? tool?.inputSchema;
+  expect(
+    "uses quario/schema.json unchanged as the tool's input schema",
+    inputSchema && JSON.stringify(inputSchema) === JSON.stringify(projectSchema),
+    inputSchema
+      ? `${Object.keys(inputSchema).length} top-level keys, ${JSON.stringify(inputSchema).length} chars`
+      : "no input schema",
+  );
+  const named = spec.fields.filter((f) => new RegExp(`\\b${f}\\b`).test(tool?.description ?? ""));
+  expect(
+    "names the invoice's fields in the tool description",
+    named.length === spec.fields.length,
+    `names ${named.length}/${spec.fields.length}: missing ${spec.fields.filter((f) => !named.includes(f)).join(", ") || "none"}`,
+  );
+
+  process.chdir(out);
+  const pdfs = () =>
+    statSync("out", { throwIfNoEntry: false })
+      ? readdirSync("out").filter((f) => f.endsWith(".pdf"))
+      : [];
+  const valid = JSON.parse(readFileSync(new URL(`../${spec.valid}`, import.meta.url), "utf8"));
+  const call = async (definition) => {
+    try {
+      return { result: await handle(definition, spec.invoiceId) };
+    } catch (error) {
+      return { error };
+    }
+  };
+
+  const before = pdfs().length;
+  const faulty = await call({ ...valid, sort: [{ by: "=@.hours", dir: "descending" }] });
+  const told = JSON.stringify(faulty.result ?? faulty.error?.message ?? "");
+  expect(
+    "answers a faulty definition with its problem, not a render",
+    told.includes("sort[0].dir") && pdfs().length === before,
+    `${faulty.error ? "threw: " : "returned: "}${told.slice(0, 160)}; new pdfs: ${pdfs().length - before}`,
+  );
+
+  const junk = [];
+  for (const input of [null, "make me an invoice", {}]) {
+    const { error } = await call(input);
+    if (error) junk.push(`${JSON.stringify(input)} threw ${error.message}`);
+  }
+  expect(
+    "answers malformed model input without throwing",
+    junk.length === 0,
+    junk.join(" | ") || "no throws",
+  );
+
+  const clean = await call(valid);
+  const made = pdfs();
+  const text = made
+    .map((f) => execFileSync("pdftotext", ["-layout", join("out", f), "-"], { encoding: "utf8" }))
+    .join("\n");
+  const shown = spec.total.toLocaleString("en-US", { minimumFractionDigits: 2 });
+  expect(
+    "renders a clean definition to a PDF in out/",
+    !clean.error && made.length > 0,
+    clean.error
+      ? `threw: ${clean.error.message}`
+      : `returned ${JSON.stringify(clean.result).slice(0, 120)}; pdfs: ${made.join(", ")}`,
+  );
+  expect(
+    "renders with the application's data: the PDF shows the correct total",
+    text.includes(shown),
+    text.includes(shown) ? `shows ${shown}` : `${shown} absent`,
+  );
+
+  const tests = readdirSync(out, { recursive: true }).filter(
+    (f) => !f.startsWith("node_modules") && /\.test\.m?js$/.test(f),
+  );
+  const run = tests.length
+    ? spawnSync(process.execPath, ["--test", ...tests], { cwd: out, encoding: "utf8" })
+    : undefined;
+  expect(
+    "adds a passing test for the handler",
+    run?.status === 0,
+    tests.length ? `${tests.join(", ")}: exit ${run.status}` : "no *.test.js file",
+  );
+}
 
 /** Files the agent left in the project, newest first, outside node_modules. */
 const files = readdirSync(out, { recursive: true })
@@ -51,9 +201,6 @@ const data = dataFile && json(dataFile);
 const rendered = files.filter((f) => f.endsWith(`.${spec.target}`));
 const source = JSON.stringify(definition ?? {});
 const source_ = spec.data ? "data" : "sample";
-
-const results = [];
-const expect = (text, passed, evidence) => results.push({ text, passed: !!passed, evidence });
 
 function checkRun() {
   if (!definitionFile || !dataFile) return undefined;
@@ -222,23 +369,4 @@ if (spec.group) {
   );
 }
 
-const passed = results.filter((r) => r.passed).length;
-writeFileSync(
-  join(runDir, "grading.json"),
-  JSON.stringify(
-    {
-      expectations: results,
-      summary: {
-        passed,
-        failed: results.length - passed,
-        total: results.length,
-        pass_rate: +(passed / results.length).toFixed(2),
-      },
-    },
-    null,
-    2,
-  ),
-);
-console.log(
-  `${name} ${basename(join(runDir, "..", ".."))}/${basename(join(runDir, ".."))}: ${passed}/${results.length}`,
-);
+verdict();

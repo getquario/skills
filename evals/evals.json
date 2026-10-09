@@ -21,7 +21,10 @@
       "files": [],
       "target": "pdf",
       "template": true,
-      "computed": { "label": "the closing balance", "pattern": "closing" }
+      "computed": {
+        "label": "the closing balance",
+        "pattern": "closing"
+      }
     },
     {
       "id": 3,
@@ -60,6 +63,18 @@
         "pattern": "^(gross|net)",
         "except": "ytd|year|todate|before|prior"
       }
+    },
+    {
+      "id": 6,
+      "name": "invoice-tool-in-app",
+      "prompt": "Our app lets support staff ask Claude (Anthropic Messages API) for things. Add a tool so Claude can draft invoice PDFs with quario. Put it in src/invoice-tool.js: export the tool definition as `draftInvoice` and its handler as `handleDraftInvoice(definition, invoiceId)`. Invoices come from getInvoice(id) in src/db.js. Write the PDFs to out/. I'll wire it into our message loop myself.",
+      "expected_output": "A tool whose input schema is quario/schema.json and whose description names the invoice fields, and a handler that validates with plan(), returns problems for a faulty definition, and renders a clean one with data from getInvoice(), plus a passing test for it.",
+      "files": ["evals/files/app/src/db.js"],
+      "app": true,
+      "total": 6468.75,
+      "valid": "evals/files/app/valid.report.json",
+      "invoiceId": "INV-7731",
+      "fields": ["invoiceNo", "issuedOn", "client", "items", "description", "hours", "rate"]
     }
   ]
 }

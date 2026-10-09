@@ -1,6 +1,6 @@
 ---
 name: quario-reports
-description: Produce a report or document (invoice, statement, listing, summary) as PDF, XLSX, DOCX, HTML or CSV by writing a quario report definition. Use when the user asks for a report from data or for a report template before the data exists, when writing or fixing a quario definition, or when the validate_report and render_report tools are available.
+description: Produce a report or document (invoice, statement, listing, summary) as PDF, XLSX, DOCX, HTML or CSV by writing a quario report definition. Use when the user asks for a report from data, for a report template before the data exists, or for an app feature that lets a model write reports, when writing or fixing a quario definition, or when the validate_report and render_report tools are available.
 ---
 
 # quario reports
@@ -18,6 +18,10 @@ validation is clean.
   `render_report` writes a file and answers with its path.
 - **Code**: you are working in a JavaScript project. Install the engine and one target, then call
   `plan()` and `render()` from a script or from the host's own code.
+- **App**: the user wants their own application to let a model write reports, such as "add an AI
+  invoice tool to our app". You do not write the report. You build the tool a model calls, and the
+  loop below runs inside its handler. Read [APP.md](APP.md) and follow it instead of the steps
+  here.
 
 ```bash
 npm install quario @quario/pdf

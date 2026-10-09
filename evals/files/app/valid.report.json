@@ -1,0 +1,36 @@
+{
+  "data": "$.items[*]",
+  "aggregates": { "total": "sum:=@.hours * @.rate" },
+  "header": [
+    { "type": "text", "value": "Invoice {{ $.input.invoiceNo }}" },
+    {
+      "type": "text",
+      "value": "{{ $.input.client.name }} <{{ $.input.client.email }}>, {{ $.input.issuedOn }}"
+    }
+  ],
+  "detail": {
+    "columns": [
+      { "header": "Description", "value": "{{ @.description }}" },
+      { "header": "Hours", "value": "{{ @.hours }}" },
+      { "header": "Rate", "value": "{{ @.rate }}" },
+      {
+        "header": "Amount",
+        "value": "{{ round(@.hours * @.rate, 2) }}",
+        "style": { "format": "currency", "currency": "USD" }
+      }
+    ],
+    "total": {
+      "rows": [
+        {
+          "cells": [
+            { "value": "Total", "span": 3 },
+            {
+              "value": "{{ round($.total, 2) }}",
+              "style": { "format": "currency", "currency": "USD" }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

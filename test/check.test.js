@@ -74,8 +74,18 @@ test("one document per record reads clean: the engine's own probes are not field
     ],
     detail: [{ type: "text", value: "Balance {{ @.balance }}" }],
   };
-  const data = { customers: [{ name: "Ada", balance: 12 }, { name: "Grace", balance: 7 }] };
-  assert.deepEqual(await check(letters, data), { problems: [], warnings: [], missing: [], unread: [] });
+  const data = {
+    customers: [
+      { name: "Ada", balance: 12 },
+      { name: "Grace", balance: 7 },
+    ],
+  };
+  assert.deepEqual(await check(letters, data), {
+    problems: [],
+    warnings: [],
+    missing: [],
+    unread: [],
+  });
 });
 
 function run(...args) {
