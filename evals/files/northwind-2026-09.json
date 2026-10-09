@@ -1,0 +1,50 @@
+{
+  "doc": {
+    "no": "B-88213",
+    "issue_date": "2026-09-30",
+    "due_date": "2026-10-30",
+    "currency_code": "EUR"
+  },
+  "bill_to": {
+    "company_name": "Northwind Traders BV",
+    "vat_id": "NL123456789B01",
+    "addr": { "line1": "Keizersgracht 120", "postcode": "1015 CW", "city": "Amsterdam" }
+  },
+  "line_items": [
+    {
+      "sku": "NW-100",
+      "desc": "Cloud hosting, September",
+      "line": { "quantity": 1, "pricing": { "unit_price": 420.0, "unit_price_incl_vat": 508.2 } },
+      "vat_rate": 0.21,
+      "amount_excl_vat": 420.0,
+      "amount": 508.2
+    },
+    {
+      "sku": "NW-210",
+      "desc": "Managed backups (per TB)",
+      "line": { "quantity": 3.5, "pricing": { "unit_price": 38.4, "unit_price_incl_vat": 46.46 } },
+      "vat_rate": 0.21,
+      "amount_excl_vat": 134.4,
+      "amount": 162.62
+    },
+    {
+      "sku": "NW-330",
+      "desc": "Support hours",
+      "line": {
+        "quantity": 6.25,
+        "pricing": { "unit_price": 95.0, "unit_price_incl_vat": 114.95 }
+      },
+      "vat_rate": 0.21,
+      "amount_excl_vat": 593.75,
+      "amount": 718.44
+    },
+    {
+      "sku": "NW-900",
+      "desc": "Onboarding workshop (VAT exempt training)",
+      "line": { "quantity": 1, "pricing": { "unit_price": 650.0, "unit_price_incl_vat": 650.0 } },
+      "vat_rate": 0,
+      "amount_excl_vat": 650.0,
+      "amount": 650.0
+    }
+  ]
+}

@@ -61,6 +61,23 @@ test("a render error is a problem, located at its band", async () => {
   assert.match(problems[0].message, /^footer\[0\]\.value/);
 });
 
+test("one document per record reads clean: the engine's own probes are not fields", async () => {
+  const letters = {
+    data: "$.customers[*]",
+    groups: [
+      {
+        name: "letter",
+        by: "=@",
+        break: "before",
+        header: [{ type: "text", value: "Dear {{ letter.key.name }}" }],
+      },
+    ],
+    detail: [{ type: "text", value: "Balance {{ @.balance }}" }],
+  };
+  const data = { customers: [{ name: "Ada", balance: 12 }, { name: "Grace", balance: 7 }] };
+  assert.deepEqual(await check(letters, data), { problems: [], warnings: [], missing: [], unread: [] });
+});
+
 function run(...args) {
   const dir = mkdtempSync(join(tmpdir(), "quario-check-"));
   const files = args.map((value, i) => {

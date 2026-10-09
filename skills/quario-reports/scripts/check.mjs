@@ -30,20 +30,27 @@ async function load(name) {
   return import(pathToFileURL(path).href);
 }
 
-/** Wraps `value` so every property read lands in `reads`, and each unanswered one in `missing`. */
-function watch(value, path, reads, missing) {
+/**
+ * Wraps `value` so every property read lands in `reads`, and each unanswered one in `missing`.
+ * One proxy per object keeps identity, because a group keyed `=@` partitions by it. An absent
+ * `then` is the engine asking whether a value is a promise, not the definition reading a field.
+ */
+function watch(value, path, reads, missing, seen = new WeakMap()) {
   if (value === null || typeof value !== "object" || ArrayBuffer.isView(value)) return value;
+  if (seen.has(value)) return seen.get(value);
   const array = Array.isArray(value);
-  return new Proxy(value, {
+  const proxy = new Proxy(value, {
     get(target, key, receiver) {
       const result = Reflect.get(target, key, receiver);
       if (typeof key === "symbol" || (array && !/^\d+$/.test(key))) return result;
       const child = array ? `${path}[]` : `${path}.${key}`;
-      if (!(key in target)) missing.add(child);
-      else reads.add(child);
-      return watch(result, child, reads, missing);
+      if (key in target) reads.add(child);
+      else if (key !== "then") missing.add(child);
+      return watch(result, child, reads, missing, seen);
     },
   });
+  seen.set(value, proxy);
+  return proxy;
 }
 
 /** Every leaf path in `value`, with array indices collapsed to `[]`. */
